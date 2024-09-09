@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woordenleer Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(to right, #e6f3ff, #ffffff);
+            color: #333;
+        }
+        #quizContainer {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        #quizContainer:hover {
+            transform: scale(1.02);
+        }
+        #vraag {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        #antwoord {
+            width: calc(100% - 24px);
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #27ae60;
+        }
+        #score, #timer {
+            font-size: 18px;
+            margin-top: 10px;
+            color: #7f8c8d;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f2d74e;
+            position: absolute;
+            left: 50%;
+            animation: confetti 5s ease-in-out -2s infinite;
+            transform-origin: left top;
+        }
+        .confetti:nth-child(1) {
+            background-color: #f2d74e; left: 10%; animation-delay: 0;
+        }
+        .confetti:nth-child(2) {
+            background-color: #95c3de; left: 20%; animation-delay: -5s;
+        }
+        .confetti:nth-child(3) {
+            background-color: #ff9a91; left: 30%; animation-delay: -3s;
+        }
+        .confetti:nth-child(4) {
+            background-color: #f2d74e; left: 40%; animation-delay: -2.5s;
+        }
+        .confetti:nth-child(5) {
+            background-color: #95c3de; left: 50%; animation-delay: -4s;
+        }
+        @keyframes confetti {
+            0% { transform: rotateZ(15deg) rotateY(0deg) translate(0,0); }
+            25% { transform: rotateZ(5deg) rotateY(360deg) translate(-5vw,20vh); }
+            50% { transform: rotateZ(15deg) rotateY(720deg) translate(5vw,60vh); }
+            75% { transform: rotateZ(5deg) rotateY(1080deg) translate(-10vw,80vh); }
+            100% { transform: rotateZ(15deg) rotateY(1440deg) translate(10vw,110vh); }
+        }
+        #fouteLijst {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        #fouteLijst h3 {
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        #fouteLijst ul {
+            padding-left: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Woordenleer Quiz</h1>
+    <div id="quizContainer">
+        <p id="vraag"></p>
+        <input type="text" id="antwoord" placeholder="Jouw antwoord">
+        <button onclick="controleerAntwoord()">Controleer</button>
+        <button onclick="toonFouteAntwoorden()">Toon foute antwoorden</button>
+        <button id="pauzeKnop" onclick="togglePauze()">Pauzeer</button>
+        <p id="result"></p>
+        <p id="score"></p>
+        <p id="timer"></p>
+    </div>
+    <div id="fouteLijst">
+        <h3>Foute antwoorden:</h3>
+        <ul id="fouteAntwoordenLijst"></ul>
+    </div>
+    <footer>
+        <p>&copy; 2024 Woordenleer Quiz - Ontwikkeld door jouw AI-assistent</p>
+    </footer>
+
+    <script>
+        const woorden = {
+            "der Besuch": "het bezoek",
+            "der Verwandte": "de verwant",
+            "der Humor": "de humor",
+            "der Klassenlehrer": "de klassenleraar",
+            "der Partner": "de partner",
+            "die Verabredung": "de afspraak",
+            "die Nachricht": "het bericht",
+            "die Beziehung": "de relatie",
+            "das Interesse": "de interesse",
+            "das Treffen": "de ontmoeting",
+            "das Verhältnis": "de verhouding",
+            "verabredet sein mit": "afgesproken zijn met",
+            "sich freuen": "zich verheugen",
+            "sich kennenlernen": "elkaar leren kennen",
+            "etwas gezamenlijk hebben": "iets gemeen hebben",
+            "sich begrijpen met": "het goed kunnen vinden met",
+            "bekommen": "krijgen",
+            "sich treffen/getroffen": "elkaar ontmoeten/ontmoet",
+            "zusammenleben": "samenwonen",
+            "sich scheiden lassen": "scheiden",
+            "leidtun": "spijten",
+            "heiraten": "trouwen",
+            "sich verlieben in": "verliefd worden op",
+            "sich küssen": "elkaar kussen",
+            "bekannt": "bekend",
+            "befreundet": "bevriend",
+            "glücklich": "gelukkig",
+            "peinlich": "gênant",
+            "geschieden": "gescheiden",
+            "verheiratet": "getrouwd",
+            "lustig": "grappig",
+            "schade": "jammer",
+            "doof": "stom",
+            "sympathisch": "sympathiek",
+            "stolz": "trots",
+            "traurig": "verdrietig",
+            "schrecklich": "verschrikkelijk",
+            "aufgeregt": "opgewonden",
+            "schon": "al",
+            "wirklich": "echt",
+            "echt": "echt",
+            "erst": "pas",
+            "ja": "toch",
+            "zufällig": "toevallig",
+            "sicher": "zeker"
+        };
+
+        let woordenLijst = Object.entries(woorden);
+        let huidigWoordIndex = 0;
+        let score = 0;
+        let fouteAntwoorden = [];
+        let timer;
+        let tijdOver;
+        let isNaarDuits;
+        let isPaused = false;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function toonVolgendWoord() {
+            if (huidigWoordIndex < woordenLijst.length) {
+                isNaarDuits = Math.random() < 0.5;
+                const [duits, nederlands] = woordenLijst[huidigWoordIndex];
+                document.getElementById('vraag').textContent = `Vertaal: ${isNaarDuits ? nederlands : duits}`;
+                document.getElementById('antwoord').value = '';
+                document.getElementById('result').textContent = '';
+                startTimer();
+            } else {
+                document.getElementById('quizContainer').innerHTML = `
+                    <h2>Quiz voltooid!</h2>
+                    <p>Je eindscore is: ${score}/${woordenLijst.length}</p>
+                    <button onclick="herstartQuiz()">Opnieuw beginnen</button>
+                `;
+            }
+        }
+
+        function startTimer() {
+            tijdOver = 20;
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                if (!isPaused) {
+                    tijdOver--;
+                    updateTimerDisplay();
+                    if (tijdOver <= 0) {
+                        clearInterval(timer);
+                        controleerAntwoord(true);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = `Tijd over: ${tijdOver} seconden`;
+        }
+
+        function levenshteinDistance(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+
+            const matrix = [];
+
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+
+            return matrix[b.length][a.length];
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                let confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                document.body.appendChild(confetti);
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        function controleerAntwoord(tijdIsOp = false) {
+            clearInterval(timer);
+            const antwoord = document.getElementById('antwoord').value.trim().toLowerCase();
+            const [duits, nederlands] = woordenLijst[huidigWoordIndex];
+            const juisteAntwoord = isNaarDuits ? duits.toLowerCase() : nederlands.toLowerCase();
+
+            if (!tijdIsOp) {
+                const distance = levenshteinDistance(antwoord, juisteAntwoord);
+                const similarity = 1 - (distance / Math.max(antwoord.length, juisteAntwoord.length));
+
+                if (similarity >= 0.8) {
+                    document.getElementById('result').textContent = 'Correct!';
+                    document.getElementById('result').style.color = '#27ae60';
+                    score++;
+                    createConfetti();
+                } else {
+                    document.getElementById('result').textContent = `Helaas, het juiste antwoord is: ${juisteAntwoord}`;
+                    document.getElementById('result').style.color = '#e74c3c';
+                    fouteAntwoorden.push(`${isNaarDuits ? nederlands : duits} - ${juisteAntwoord}`);
+                }
+            } else {
+                document.getElementById('result').textContent = `Tijd is op! Het juiste antwoord is: ${juisteAntwoord}`;
+                document.getElementById('result').style.color = '#e74c3c';
+                fouteAntwoorden.push(`${isNaarDuits ? nederlands : duits} - ${juisteAntwoord}`);
+            }
+
+            document.getElementById('score').textContent = `Score: ${score}/${huidigWoordIndex + 1}`;
+            huidigWoordIndex++;
+            setTimeout(toonVolgendWoord, 2000);
+        }
+
+        function toonFouteAntwoorden() {
+            const lijst = document.getElementById('fouteAntwoordenLijst');
+            lijst.innerHTML = '';
+            fouteAntwoorden.forEach(antwoord => {
+                const li = document.createElement('li');
+                li.textContent = antwoord;
+                lijst.appendChild(li);
+            });
+            document.getElementById('fouteLijst').style.display = 'block';
+        }
+
+        function herstartQuiz() {
+            shuffleArray(woordenLijst);
+            huidigWoordIndex = 0;
+            score = 0;
+            fouteAntwoorden = [];
+            document.getElementById('fouteLijst').style.display = 'none';
+            isPaused = false;
+            document.getElementById('pauzeKnop').textContent = 'Pauzeer';
+            toonVolgendWoord();
+        }
+
+        function togglePauze() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(timer);
+                document.getElementById('pauzeKnop').textContent = 'Hervat';
+            } else {
+                huidigWoordIndex++; // Ga naar het volgende woord
+                toonVolgendWoord();
+                document.getElementById('pauzeKnop').textContent = 'Pauzeer';
+            }
+        }
+
+        // Start de quiz
+        herstartQuiz();
+
+        // Voeg Enter-toets functionaliteit toe
+        document.getElementById('antwoord').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter' && !isPaused) {
+                controleerAntwoord();
+            }
+        });
+    </script>
+</body>
+</html>
